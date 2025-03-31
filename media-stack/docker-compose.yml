@@ -1,0 +1,166 @@
+services:
+  plex:
+    container_name: ${PLEX_NAME}
+    image: ${PLEX_IMAGE}
+    restart: unless-stopped
+    networks:
+      - media-net
+      - management-net
+    environment:
+      - TZ=${TZ}
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_PASS=${PLEX_PASS}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - PLEX_TRANSCODE_DIR=/transcode
+    ports:
+      - "${PLEX_PORT}:32400"
+  # -----------------------------
+  # Hardware Transcoding
+  # Enable if using iGPU or GPU
+  # -----------------------------
+  # devices:
+  #   - /dev/dri:/dev/dri
+
+    tmpfs:
+      - /transcode:rw,size=3g
+    volumes:
+      - ${PLEX_CONFIG}:/config
+      - /mnt/data/media:/data/media
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/web"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  radarr:
+    container_name: ${RADARR_NAME}
+    image: ${RADARR_IMAGE}
+    restart: unless-stopped
+    networks:
+      - media-net
+      - management-net
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - "${RADARR_PORT}:7878"
+    volumes:
+      - ${RADARR_CONFIG}:/config
+      - /mnt/data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7878/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  sonarr:
+    container_name: ${SONARR_NAME}
+    image: ${SONARR_IMAGE}
+    restart: unless-stopped
+    networks:
+      - media-net
+      - management-net
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - "${SONARR_PORT}:8989"
+    volumes:
+      - ${SONARR_CONFIG}:/config
+      - /mnt/data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  jackett:
+    container_name: ${JACKETT_NAME}
+    image: ${JACKETT_IMAGE}
+    restart: unless-stopped
+    networks:
+      - media-net
+      - management-net
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - "${JACKETT_PORT}:9117"
+    volumes:
+      - ${JACKETT_CONFIG}:/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9117"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  qbittorrent:
+    container_name: ${QBITTORRENT_NAME}
+    image: ${QBITTORRENT_IMAGE}
+    restart: unless-stopped
+    networks:
+      - media-net
+      - management-net
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=${QBITTORRENT_UMASK}
+      - WebUI_Port=${QBITTORRENT_WEBUI_PORT}
+    ports:
+      - "${QBITTORRENT_PORT}:8080"
+    volumes:
+      - ${QBITTORRENT_CONFIG}:/config
+      - /mnt/data/torrents:/data/torrents
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  unpackerr:
+    container_name: ${UNPACKERR_NAME}
+    image: ${UNPACKERR_IMAGE}
+    restart: unless-stopped
+    networks:
+      - media-net
+      - management-net
+    environment:
+      - TZ=${TZ}
+      - UN_DEBUG=${UN_DEBUG}
+      - UN_LOG_FILE=${UN_LOG_FILE}
+      - UN_SONARR_0_URL=${UN_SONARR_0_URL}
+      - UN_SONARR_0_API_KEY=${UN_SONARR_0_API_KEY}
+      - UN_SONARR_0_PATH=${UN_SONARR_0_PATH}
+      - UN_RADARR_0_URL=${UN_RADARR_0_URL}
+      - UN_RADARR_0_API_KEY=${UN_RADARR_0_API_KEY}
+      - UN_RADARR_0_PATH=${UN_RADARR_0_PATH}
+      - UN_SONARR_0_DELETE_DELAY=${UN_SONARR_0_DELETE_DELAY}
+      - UN_RADARR_0_DELETE_DELAY=${UN_RADARR_0_DELETE_DELAY}
+      - UN_TIMEOUT=${UN_TIMEOUT}
+      - UN_PARALLEL=${UN_PARALLEL}
+      - UN_INTERVAL=${UN_INTERVAL}
+      - UN_DELETE_DELAY=${UN_DELETE_DELAY}
+      - UN_START_DELAY=${UN_START_DELAY}
+      - UN_RETRY_DELAY=${UN_RETRY_DELAY}
+      - UN_WEBSERVER_METRICS=true
+      - UN_WEBSERVER_LISTEN_ADDR=0.0.0.0:5656
+
+    volumes:
+      - /mnt/data/torrents:/downloads
+
+    depends_on:
+      radarr:
+        condition: service_healthy
+      sonarr:
+        condition: service_healthy
+
+networks:
+  media-net:
+    external: true
+  management-net:
+    external: true

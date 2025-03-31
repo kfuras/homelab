@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          stack: management
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+        labels:
+          stack: management
+
+  - job_name: "media-stack"
+    static_configs:
+      - targets:
+          - "radarr:7878"
+          - "sonarr:8989"
+          - "jackett:9117"
+          - "qbittorrent:8080"
+          - "plex:32400"
+          - "unpackerr:5656"
+        labels:
+          stack: media
+
+  - job_name: "unifi-stack"
+    static_configs:
+      - targets:
+          - "unifi-controller:8443"  # Adjust this if container/port differs
+        labels:
+          stack: unifi
+
+  - job_name: "management-stack"
+    static_configs:
+      - targets:
+          - "uptime-kuma:3001"
+        labels:
+          stack: management
+

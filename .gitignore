@@ -1,0 +1,14 @@
+# Ignore everything in appdata folders...
+**/appdata/**
+
+# Allow folders (so Git can track them if empty or with only allowed files)
+!**/appdata/**/
+!**/appdata/**/*.yml
+
+# Ignore sensitive .env files but not .env.example
+**/.env
+
+# System files
+*.log
+.DS_Store
+Thumbs.db

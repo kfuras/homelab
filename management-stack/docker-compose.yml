@@ -1,0 +1,52 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    volumes:
+      - ./appdata/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./appdata/prometheus/data:/prometheus
+    networks:
+      - management-net
+      - unifi-net
+      - media-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - ./appdata/grafana:/var/lib/grafana
+    networks:
+      - management-net
+      - unifi-net
+      - media-net
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "${UPTIME_KUMA_PORT}:3001"
+    volumes:
+      - ./appdata/uptime-kuma:/app/data
+    networks:
+      - management-net
+      - unifi-net
+      - media-net
+
+networks:
+  management-net:
+    external: true
+  unifi-net:
+    external: true
+  media-net:
+    external: true
+
