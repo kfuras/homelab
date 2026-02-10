@@ -1,7 +1,7 @@
 services:
   plex:
-    container_name: ${PLEX_NAME}
-    image: ${PLEX_IMAGE}
+    container_name: plex
+    image: ghcr.io/hotio/plex:latest
     restart: unless-stopped
     networks:
       - media-net
@@ -14,7 +14,7 @@ services:
       - PGID=${PGID}
       - PLEX_TRANSCODE_DIR=/transcode
     ports:
-      - "${PLEX_PORT}:32400"
+      - "32400:32400"
   # -----------------------------
   # Hardware Transcoding
   # Enable if using iGPU or GPU
@@ -34,8 +34,8 @@ services:
       retries: 3
 
   radarr:
-    container_name: ${RADARR_NAME}
-    image: ${RADARR_IMAGE}
+    container_name: radarr
+    image: lscr.io/linuxserver/radarr:latest
     restart: unless-stopped
     networks:
       - media-net
@@ -45,7 +45,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     ports:
-      - "${RADARR_PORT}:7878"
+      - "7878:7878"
     volumes:
       - ${RADARR_CONFIG}:/config
       - /mnt/data:/data
@@ -56,8 +56,8 @@ services:
       retries: 3
 
   sonarr:
-    container_name: ${SONARR_NAME}
-    image: ${SONARR_IMAGE}
+    container_name: sonarr
+    image: lscr.io/linuxserver/sonarr:latest
     restart: unless-stopped
     networks:
       - media-net
@@ -67,7 +67,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     ports:
-      - "${SONARR_PORT}:8989"
+      - "8989:8989"
     volumes:
       - ${SONARR_CONFIG}:/config
       - /mnt/data:/data
@@ -78,8 +78,8 @@ services:
       retries: 3
 
   jackett:
-    container_name: ${JACKETT_NAME}
-    image: ${JACKETT_IMAGE}
+    container_name: jackett
+    image: ghcr.io/hotio/jackett:latest
     restart: unless-stopped
     networks:
       - media-net
@@ -89,7 +89,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
     ports:
-      - "${JACKETT_PORT}:9117"
+      - 9117:9117
     volumes:
       - ${JACKETT_CONFIG}:/config
     healthcheck:
@@ -99,8 +99,8 @@ services:
       retries: 3
 
   qbittorrent:
-    container_name: ${QBITTORRENT_NAME}
-    image: ${QBITTORRENT_IMAGE}
+    container_name: qbittorrent
+    image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
     networks:
       - media-net
@@ -109,22 +109,24 @@ services:
       - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
-      - UMASK=${QBITTORRENT_UMASK}
-      - WebUI_Port=${QBITTORRENT_WEBUI_PORT}
+      - WEBUI_PORT=8081
+      - TORRENTING_PORT=6881
     ports:
-      - "${QBITTORRENT_PORT}:8080"
+      - 8081:8081
+      - 6881:6881
+      - 6881:6881/udp
     volumes:
       - ${QBITTORRENT_CONFIG}:/config
       - /mnt/data/torrents:/data/torrents
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081"]
       interval: 30s
       timeout: 5s
       retries: 3
 
   unpackerr:
-    container_name: ${UNPACKERR_NAME}
-    image: ${UNPACKERR_IMAGE}
+    container_name: unpackerr
+    image: golift/unpackerr:latest
     restart: unless-stopped
     networks:
       - media-net
